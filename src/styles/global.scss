@@ -1,0 +1,522 @@
+/* ═══════════════════════════════════════════════════════════════
+   Maropost Global Styles
+   ═══════════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* ─── Display type utility classes (Inter, tightened for size) ─ */
+.mp-display-sm,
+.mp-display-md,
+.mp-display-lg,
+.mp-display-xl {
+  font-family: var(--mp-typography-fontFamily-base);
+  color: rgb(var(--v-theme-on-background));
+  font-feature-settings: 'ss01', 'cv11';
+  margin: 0;
+}
+.mp-display-sm {
+  font-size: var(--mp-typography-display-sm-fontSize);
+  line-height: var(--mp-typography-display-sm-lineHeight);
+  letter-spacing: var(--mp-typography-display-sm-letterSpacing);
+  font-weight: var(--mp-typography-display-sm-fontWeight);
+}
+.mp-display-md {
+  font-size: var(--mp-typography-display-md-fontSize);
+  line-height: var(--mp-typography-display-md-lineHeight);
+  letter-spacing: var(--mp-typography-display-md-letterSpacing);
+  font-weight: var(--mp-typography-display-md-fontWeight);
+}
+.mp-display-lg {
+  font-size: var(--mp-typography-display-lg-fontSize);
+  line-height: var(--mp-typography-display-lg-lineHeight);
+  letter-spacing: var(--mp-typography-display-lg-letterSpacing);
+  font-weight: var(--mp-typography-display-lg-fontWeight);
+}
+.mp-display-xl {
+  font-size: var(--mp-typography-display-xl-fontSize);
+  line-height: var(--mp-typography-display-xl-lineHeight);
+  letter-spacing: var(--mp-typography-display-xl-letterSpacing);
+  font-weight: var(--mp-typography-display-xl-fontWeight);
+}
+
+.mp-eyebrow {
+  font-size: var(--mp-typography-fontSize-xs);
+  font-weight: var(--mp-typography-fontWeight-semibold);
+  letter-spacing: var(--mp-typography-letterSpacing-eyebrow);
+  text-transform: uppercase;
+  color: rgb(var(--v-theme-on-surface-variant));
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: var(--mp-typography-fontFamily-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+#app {
+  max-width: unset;
+  text-align: unset;
+  padding: unset;
+  margin: unset;
+  place-items: unset;
+}
+
+body {
+  display: block;
+  place-items: unset;
+  background: rgb(var(--v-theme-background));
+  color: rgb(var(--v-theme-on-background));
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* Tabular nums for numeric values */
+.num { font-variant-numeric: tabular-nums; }
+
+/* Icon-only button — compact 32×32 ghost circle */
+.mp-btn--icon {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  padding: 0 !important;
+  border-radius: var(--r-pill) !important;
+}
+
+/* Filter/count badge inside buttons */
+.mp-btn-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1px 6px;
+  margin-left: 4px;
+  border-radius: var(--r-pill);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+:where(
+  a,
+  button,
+  [role='button'],
+  .v-btn,
+  .v-tab,
+  .v-list-item,
+  .v-chip
+):focus-visible {
+  outline: 2px solid rgba(var(--v-theme-primary), 0.36);
+  outline-offset: 2px;
+}
+
+.v-application {
+  font-family: var(--mp-typography-fontFamily-base);
+  color: rgb(var(--v-theme-on-background));
+}
+
+
+.v-btn {
+  transition:
+    transform $mp-transition-fast,
+    box-shadow $mp-transition-fast,
+    border-color $mp-transition-fast,
+    background-color $mp-transition-fast,
+    color $mp-transition-fast;
+}
+
+.v-btn:not(.v-btn--disabled):hover {
+  transform: none;
+}
+
+.v-btn--variant-flat:not(.v-btn--disabled) {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), 0 1px 3px rgba(45, 99, 232, 0.24);
+}
+
+.v-btn--variant-outlined {
+  border-color: var(--mp-border-subtle) !important;
+}
+
+.v-field {
+  transition:
+    box-shadow $mp-transition-fast,
+    border-color $mp-transition-fast,
+    background-color $mp-transition-fast;
+}
+
+/* VCard variant="flat" is transparent in Vuetify 3. Force solid surface
+   background on all cards/sheets/steppers/MbCard inside overlays/dialogs.
+   Both direct-child (>) and descendant selectors for maximum coverage. */
+.v-overlay__content > .v-card,
+.v-overlay__content > .v-sheet,
+.v-overlay__content > .v-stepper,
+.v-overlay__content > .mb-card,
+.v-overlay__content .v-card,
+.v-overlay__content .v-sheet,
+.v-overlay__content .v-stepper,
+.v-overlay__content .mb-card {
+  background: rgb(var(--v-theme-surface)) !important;
+}
+
+.v-field--variant-outlined .v-field__outline {
+  --v-field-border-opacity: 1;
+}
+
+.v-field--variant-solo-filled {
+  border: 1px solid rgba(var(--v-theme-primary), 0.08);
+  box-shadow: none;
+}
+
+/* ─── Bridge Marobase-UI tokens → Vuetify theme ──────────────────── */
+/* Ensures MbTabs, MbChip etc. use the app's primary, not the        */
+/* standalone Marobase teal, when rendered inside the Vuetify shell. */
+.v-application {
+  --mb-color-primary: rgb(var(--v-theme-primary));
+  --mb-color-primary-soft: rgba(var(--v-theme-primary), 0.10);
+  --mb-color-primary-soft-hover: rgba(var(--v-theme-primary), 0.16);
+  --mb-tabs-focus-ring: 0 0 0 2px rgb(var(--v-theme-primary));
+  --mb-focus-ring: 0 0 0 2px rgba(var(--v-theme-primary), 0.70);
+}
+
+.v-tab {
+  letter-spacing: 0;
+  font-size: 13px;
+  text-transform: none;
+  font-weight: var(--mp-typography-fontWeight-semibold);
+}
+
+.mp-toggle-group .v-btn {
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.mp-toggle-group .v-btn__content,
+.mp-toggle-group .v-btn__prepend,
+.mp-toggle-group .v-btn__append {
+  color: inherit !important;
+  opacity: 1;
+}
+
+.mp-toggle-group .v-btn .v-icon {
+  color: inherit !important;
+}
+
+.mp-toggle-group .v-btn--active > .v-btn__overlay,
+.mp-toggle-group .v-slide-group-item--active > .v-btn__overlay {
+  opacity: 0 !important;
+}
+
+.mp-toggle-group--segmented .v-btn--active,
+.mp-toggle-group--segmented .v-slide-group-item--active {
+  background: rgb(var(--v-theme-primary)) !important;
+  color: rgb(var(--v-theme-on-primary)) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.mp-toggle-group--segmented .v-btn:not(.v-btn--active):not(.v-slide-group-item--active) {
+  color: rgba(var(--v-theme-on-surface), 0.74);
+}
+
+.mp-toggle-group--pills .v-btn--active,
+.mp-toggle-group--pills .v-slide-group-item--active {
+  color: rgb(var(--v-theme-on-primary)) !important;
+}
+
+/* ─── Border Utilities (token-driven via mp-theme-aliases.css) ─ */
+.border-b {
+  border-bottom: 1px solid var(--mp-border-subtle);
+}
+.border-t {
+  border-top: 1px solid var(--mp-border-subtle);
+}
+.border-r {
+  border-right: 1px solid var(--mp-border-subtle);
+}
+.border-l {
+  border-left: 1px solid var(--mp-border-subtle);
+}
+
+/* Primary border accent (token-driven) */
+.border-primary {
+  border-color: rgb(var(--v-theme-primary));
+}
+
+/* Alternating row striping (subtle; text color unchanged) */
+.mp-row-alt {
+  background: rgba(var(--v-theme-on-surface), 0.04);
+}
+
+/* Storybook / app canvas background (theme-aware) */
+.mp-story-canvas {
+  background: rgb(var(--v-theme-background));
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* ─── Gap Utilities ─────────────────────────────────────────── */
+.gap-1 { gap: 4px; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+.gap-5 { gap: 20px; }
+.gap-6 { gap: 24px; }
+
+/* ─── Sidebar Nav States ────────────────────────────────────── */
+/* Active styling is owned by AppSidebar.vue tokens (--sidebar-active-bg/text).
+   Only suppress the Vuetify overlay ripple to avoid double highlight. */
+.mp-sidebar .v-list-item--active > .v-list-item__overlay {
+  opacity: 0 !important;
+}
+
+/* ─── Table Action Buttons (reveal on hover / focus / touch) ── */
+.action-btns {
+  opacity: 0;
+  transition: opacity $mp-transition-fast;
+}
+tr:hover .action-btns,
+tr:focus-within .action-btns {
+  opacity: 1;
+}
+/* Always show on touch screens where hover is unavailable */
+@media (hover: none) {
+  .action-btns { opacity: 1; }
+}
+
+/* ─── Card Hover Lift (humane, subtle) ───────────────────────── */
+.card-hover {
+  transition:
+    transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+  cursor: pointer;
+  will-change: transform;
+}
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--mp-shadow-md);
+  border-color: rgba(var(--v-theme-primary), 0.24) !important;
+}
+
+/* ─── Settings Card Hover ───────────────────────────────────── */
+.settings-tile {
+  transition: all $mp-transition-fast;
+  cursor: pointer;
+}
+.settings-tile:hover {
+  border-color: rgba(var(--v-theme-secondary), 0.12) !important;
+  background: rgba(var(--v-theme-primary), 0.12) !important;
+}
+
+/* ─── Floating Bulk Action Bar ──────────────────────────────── */
+.mp-floating-bulk-bar {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  background: rgb(var(--v-theme-surface));
+  border: 1px solid var(--mp-border-subtle);
+  box-shadow: none;
+  border-radius: $mp-radius-xl;
+  padding: 16px 24px;
+}
+
+/* ─── Dashed Border Helper ──────────────────────────────────── */
+.border-dashed {
+  border-style: dashed !important;
+  border-width: 2px !important;
+}
+
+/* ─── Card dividers (token: color.*.borderDividerMuted) ── */
+.v-card .v-divider {
+  opacity: 1;
+  border-top-color: var(--mp-color-light-borderDividerMuted);
+}
+
+.v-application.v-theme--maropostDark .v-card .v-divider {
+  border-top-color: var(--mp-color-dark-borderDividerMuted);
+}
+
+/* VDataTable: divider above footer — token: color.light/dark.borderTableFooterDivider */
+.v-data-table > .v-divider {
+  opacity: 1;
+  border-top-color: var(--mp-border-table-footer-divider);
+}
+
+.v-data-table .v-data-table-footer {
+  border-top-width: 0;
+  border-top-style: none;
+}
+
+.v-table .v-table__wrapper > table > tbody > tr > td {
+  border-bottom-color: var(--mp-border-table-row);
+}
+
+.v-table .v-table__wrapper > table > thead > tr > th,
+.v-data-table .v-table__wrapper > table > thead > tr > th.v-data-table__th {
+  border-bottom-color: var(--mp-border-table-header);
+  color: rgb(var(--v-theme-on-surface-variant)) !important;
+  font-size: 11px !important;
+  line-height: 1.05 !important;
+  font-weight: var(--mp-typography-fontWeight-semibold) !important;
+  letter-spacing: 0.25px !important;
+  text-transform: uppercase;
+  padding-block: 5px !important;
+}
+
+.v-table .v-table__wrapper > table > thead > tr > th .v-data-table-header__content,
+.v-table .v-table__wrapper > table > thead > tr > th .v-data-table-header__content span,
+.v-data-table .v-table__wrapper > table > thead > tr > th.v-data-table__th .v-data-table-header__content,
+.v-data-table .v-table__wrapper > table > thead > tr > th.v-data-table__th .v-data-table-header__content span {
+  font-size: inherit !important;
+  line-height: inherit !important;
+  letter-spacing: inherit !important;
+  font-weight: inherit !important;
+}
+
+/* Dialog/modal scrim — Vuetify default 0.32 is too light; use 0.56 for legible contrast */
+.v-overlay__scrim {
+  opacity: 0.56 !important;
+}
+
+.v-overlay.v-tooltip {
+  background: transparent !important;
+}
+
+/* Teleported overlays are outside .v-application — use theme class + raw token vars */
+.v-overlay__content .v-divider {
+  opacity: 1;
+  border-top-color: var(--mp-color-light-borderDividerMuted);
+}
+
+.v-theme--maropostDark .v-overlay__content .v-divider {
+  border-top-color: var(--mp-color-dark-borderDividerMuted);
+}
+
+/* ─── Popover surfaces (menus + select/autocomplete dropdowns) ─ */
+/* Vuetify renders all v-menu content (including inside v-select,
+   v-autocomplete, v-combobox) inside `.v-menu > .v-overlay__content`.
+   One rule, one consistent shadcn-style soft surface. */
+.v-menu > .v-overlay__content > .v-card,
+.v-menu > .v-overlay__content > .v-list,
+.v-menu > .v-overlay__content > .v-sheet {
+  background: rgb(var(--v-theme-surface));
+  border: 1px solid var(--mp-border-subtle) !important;
+  border-radius: var(--mp-borderRadius-md) !important;
+  box-shadow: var(--mp-shadow-lg), var(--mp-shadow-md) !important;
+  overflow: hidden;
+}
+
+/* ─── Chip tonal variants (design kit) ──────────────────────── */
+.v-chip.v-chip--tonal-primary { background: rgb(var(--v-theme-primary-container)) !important; color: rgb(var(--v-theme-on-primary-container)) !important; }
+.v-chip.v-chip--tonal-success { background: rgb(var(--v-theme-success-container)) !important; color: rgb(var(--v-theme-on-success-container)) !important; }
+.v-chip.v-chip--tonal-warning { background: rgb(var(--v-theme-warning-container)) !important; color: rgb(var(--v-theme-on-warning-container)) !important; }
+.v-chip.v-chip--tonal-error   { background: rgb(var(--v-theme-error-container)) !important; color: rgb(var(--v-theme-on-error-container)) !important; }
+.v-chip.v-chip--outlined-kit  { background: transparent !important; border: 1px solid rgb(var(--v-theme-outline-variant)) !important; color: rgb(var(--v-theme-on-surface)) !important; }
+
+/* ─── Alert tonal styling (design kit) ──────────────────────── */
+.v-alert.v-alert--variant-tonal {
+  border: none;
+}
+
+/* ─── Scrollbar Styling ─────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.28); }
+
+/* ─── Hide Scrollbar Utility ────────────────────────────────── */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Button Group Fix ──────────────────────────────────────── */
+/* Prevent global .rounded-lg classes from breaking grouped borders */
+.v-btn-group {
+  & > .v-btn:not(:first-child):not(:last-child) {
+    border-radius: 0 !important;
+  }
+  & > .v-btn:first-child:not(:last-child) {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+  }
+  & > .v-btn:last-child:not(:first-child) {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+  }
+}
+
+// ─── Sidebar border reset ──────────────────────────────────────────────────
+// VList has border:true globally, which adds an unwanted border inside the sidebar.
+.mp-sidebar .v-list {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+// ─── Sidebar icon colour fix ───────────────────────────────────────────────
+// Vuetify applies the light-theme colour (rgba 0,0,0,0.87) to icons inside
+// the navigation drawer because the component inherits the app theme.
+// Override here globally so rail-mode icons are visible on the dark sidebar.
+.mp-sidebar .v-icon {
+  color: var(--mp-color-sidebar-text) !important;
+  opacity: 1 !important;
+}
+
+// Popover list text — match sidebar font-size
+.rail-popover .v-list-item-title {
+  font-size: 13px !important;
+}
+
+/* ─── Dialog shell normalization ─────────────────────────────────── */
+/* Ensures v-dialog cards always have consistent radius and surface. */
+.v-dialog > .v-overlay__content > .v-card,
+.v-dialog > .v-overlay__content > .v-sheet {
+  border-radius: 12px !important;
+  background: rgb(var(--v-theme-surface)) !important;
+}
+
+/* Normalize dialog card title typography */
+.v-dialog .v-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.35;
+}
+
+/* Footer actions always right-aligned; gap between buttons */
+.v-dialog .v-card-actions {
+  gap: 8px;
+}
+
+/* Drawer card titles share same type scale */
+.v-navigation-drawer .v-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

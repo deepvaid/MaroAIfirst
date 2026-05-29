@@ -1,0 +1,30 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Main App",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 5173
+    },
+    {
+      "name": "Storybook",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "storybook"],
+      "port": 6006,
+      "autoPort": true
+    },
+    {
+      "name": "Design Kit",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "design-kit:dev"],
+      "port": 5174
+    },
+    {
+      "name": "Widget Library",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-p", "5175", "."],
+      "port": 5175
+    }
+  ]
+}

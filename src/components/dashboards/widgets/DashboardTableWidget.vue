@@ -1,0 +1,225 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import type { DashboardTableData } from '@/stores/dashboards/types'
+
+const props = defineProps<{
+  data: DashboardTableData
+}>()
+
+function parseCurrency(value: string | number | undefined): number {
+  if (typeof value === 'number') return value
+  if (!value) return 0
+  return Number(value.replace(/[^0-9.-]/g, '')) || 0
+}
+
+const isCampaignRevenueTable = computed(() =>
+  props.data.columns.some((column) => column.key === 'campaign')
+  && props.data.columns.some((column) => column.key === 'revenue'),
+)
+
+const campaignRows = computed(() => {
+  const rows = props.data.rows.map((row) => ({
+    campaign: String(row.campaign ?? ''),
+    revenue: String(row.revenue ?? ''),
+    openRate: String(row.openRate ?? ''),
+    value: parseCurrency(row.revenue),
+  }))
+  const maxValue = Math.max(...rows.map((row) => row.value), 1)
+  return rows.slice(0, 5).map((row) => ({
+    ...row,
+    percent: Math.max(8, Math.round((row.value / maxValue) * 100)),
+  }))
+})
+</script>
+
+<template>
+  <div class="dashboard-table-widget">
+    <div v-if="isCampaignRevenueTable" class="dashboard-campaign-list">
+      <div class="dashboard-campaign-list__rows">
+        <div v-for="row in campaignRows" :key="row.campaign" class="dashboard-campaign-list__row">
+          <div class="dashboard-campaign-list__topline">
+            <span class="dashboard-campaign-list__name">{{ row.campaign }}</span>
+            <strong class="dashboard-campaign-list__value">{{ row.revenue }}</strong>
+          </div>
+          <div class="dashboard-campaign-list__meter">
+            <span :style="{ width: `${row.percent}%` }" />
+          </div>
+          <div v-if="row.openRate" class="dashboard-campaign-list__meta">{{ row.openRate }}</div>
+        </div>
+      </div>
+      <button type="button" class="dashboard-campaign-list__link">
+        View all campaigns
+        <v-icon size="16">arrow-right</v-icon>
+      </button>
+    </div>
+
+    <v-table v-else density="compact" class="dashboard-table-widget__table">
+      <thead>
+        <tr>
+          <th
+            v-for="column in data.columns"
+            :key="column.key"
+            :class="column.align === 'end' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left'"
+          >
+            {{ column.label }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(row, index) in data.rows" :key="index">
+          <td
+            v-for="column in data.columns"
+            :key="column.key"
+            :class="column.align === 'end' ? 'text-right' : column.align === 'center' ? 'text-center' : 'text-left'"
+          >
+            <span class="text-body-2">{{ row[column.key] }}</span>
+          </td>
+        </tr>
+      </tbody>
+    </v-table>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.dashboard-table-widget {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+  border-radius: var(--r-card);
+}
+
+.dashboard-campaign-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.dashboard-campaign-list__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 4px 2px 8px 0;
+  overflow-y: auto;
+}
+
+.dashboard-campaign-list__row {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.dashboard-campaign-list__topline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 12px;
+  color: var(--ink);
+  font-size: 13.5px;
+}
+
+.dashboard-campaign-list__name {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-campaign-list__value {
+  font-size: 13.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.dashboard-campaign-list__meter {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--accent-soft);
+}
+
+.dashboard-campaign-list__meter span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transition: width 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.dashboard-campaign-list__meta {
+  justify-self: end;
+  margin-top: -3px;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-campaign-list__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  padding: 10px 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--accent-ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-align: left;
+  transition: opacity 120ms ease;
+}
+
+.dashboard-campaign-list__link:hover {
+  opacity: 0.75;
+}
+
+.dashboard-campaign-list__link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 18%, transparent);
+}
+
+.dashboard-table-widget__table {
+  background: transparent !important;
+}
+
+.dashboard-table-widget :deep(th) {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--hairline);
+  position: sticky;
+  top: 0;
+  background: var(--surface-1);
+  z-index: 1;
+  white-space: nowrap;
+}
+
+.dashboard-table-widget :deep(td) {
+  font-size: 13.5px;
+  color: var(--ink);
+  border-bottom: 1px solid var(--hairline);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+  padding: 12px 4px;
+}
+
+.dashboard-table-widget :deep(tr:last-child td) {
+  border-bottom: none;
+}
+
+.dashboard-table-widget :deep(tr:hover td) {
+  background: var(--surface-2);
+}
+</style>

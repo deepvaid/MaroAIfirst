@@ -1,0 +1,47 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+dist-storybook
+storybook-static
+*.local
+.env
+.env.*
+!.env.example
+
+
+# Coverage
+coverage
+
+# Vercel
+.vercel
+
+# Figma cache & pnpm store (large binary/JSON files)
+.cache/
+.pnpm-store/
+
+# Cursor / Claude agent worktree mirrors (large; regenerate locally)
+.claude/worktrees/
+
+# Retail Cloud POS APK (204 MB binary — distribute out-of-band, not via git)
+Retail Cloud POS APK/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env*.local
