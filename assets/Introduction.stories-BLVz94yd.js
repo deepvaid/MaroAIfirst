@@ -1,0 +1,5 @@
+const s={title:"Introduction/MaroBase",tags:["autodocs"],parameters:{docs:{description:{component:"Prototype UI is built from `@marobase/ui` (Vue components in `packages/marobase-ui`) plus Vuetify for layout and data tables. Design tokens: import `packages/marobase-ui/src/tokens/index.css` in the app (see `src/main.ts`) and run `npm run tokens:build` when JSON tokens change."}}}},e={render:()=>({template:'<p class="text-body-1">Use the sidebar: <strong>Foundations</strong> for tokens, <strong>Components</strong> for MaroBase (Mb*) stories. Legacy Vuetify demos live under <strong>Archive</strong>.</p>'})};e.parameters={...e.parameters,docs:{...e.parameters?.docs,source:{originalSource:`{
+  render: () => ({
+    template: '<p class="text-body-1">Use the sidebar: <strong>Foundations</strong> for tokens, <strong>Components</strong> for MaroBase (Mb*) stories. Legacy Vuetify demos live under <strong>Archive</strong>.</p>'
+  })
+}`,...e.parameters?.docs?.source}}};const o=["Readme"];export{e as Readme,o as __namedExportsOrder,s as default};
