@@ -46,6 +46,9 @@ export function createGeminiProvider(apiKey: string, model: string): AiProvider 
           generationConfig: {
             temperature: 0.4,
             maxOutputTokens: 420,
+            // gemini-2.5-flash is a thinking model; disable thinking so the token
+            // budget produces visible reply text instead of internal reasoning.
+            thinkingConfig: { thinkingBudget: 0 },
           },
         }),
       })

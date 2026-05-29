@@ -304,13 +304,23 @@ function openSetupTask(task: SetupTask) {
   router.push(task.route)
 }
 
+function askAiForSetupTask(task: SetupTask) {
+  copilot.seedPrompt(`Help me with this launch task: ${task.title}. ${task.description}`, {
+    openPanel: true,
+    pinned: true,
+  })
+}
+
 function openWidgetBuilder() {
   dashboardsStore.closeWidgetEditor()
   widgetWizardOpen.value = true
 }
 
 function openCopilotForWidget() {
-  copilot.open()
+  copilot.seedPrompt('Create a dashboard widget from my workspace data.', {
+    openPanel: true,
+    pinned: true,
+  })
 }
 
 function handleLayoutUpdate(layout: Array<{ i: string; x: number; y: number; w: number; h: number }>) {
@@ -785,6 +795,58 @@ function toggleFavoriteActive() {
       </div>
     </section>
 
+    <section class="dashboard-ai-home mt-4" aria-label="Da Vinci launch assistant">
+      <div class="dashboard-ai-home__header">
+        <div>
+          <div class="dashboard-ai-home__eyebrow">To Do for the AI</div>
+          <h2 class="dashboard-ai-home__title">Launch readiness</h2>
+          <p class="dashboard-ai-home__copy">
+            Da Vinci can inspect the workspace, prepare a reviewable plan, and open the right classic screen when you approve.
+          </p>
+        </div>
+        <v-chip color="primary" variant="tonal" size="small">
+          {{ setupProgress }}% ready
+        </v-chip>
+      </div>
+
+      <div class="dashboard-ai-home__tasks">
+        <v-card
+          v-for="task in setupTasks"
+          :key="task.title"
+          flat
+          border
+          rounded="lg"
+          class="dashboard-ai-home__task"
+        >
+          <div class="dashboard-ai-home__task-top">
+            <v-avatar size="32" variant="tonal" :color="task.complete ? 'success' : 'primary'">
+              <v-icon size="18">{{ task.icon }}</v-icon>
+            </v-avatar>
+            <v-chip size="x-small" :color="task.complete ? 'success' : 'warning'" variant="tonal">
+              {{ task.status }}
+            </v-chip>
+          </div>
+          <div class="dashboard-ai-home__task-title">{{ task.title }}</div>
+          <p class="dashboard-ai-home__task-copy">{{ task.description }}</p>
+          <div class="dashboard-ai-home__task-actions">
+            <v-btn size="small" variant="text" class="text-none" @click="openSetupTask(task)">
+              Open
+            </v-btn>
+            <v-btn
+              size="small"
+              color="primary"
+              variant="tonal"
+              class="text-none"
+              prepend-icon="sparkles"
+              @click="askAiForSetupTask(task)"
+            >
+              Ask AI
+            </v-btn>
+          </div>
+        </v-card>
+      </div>
+    </section>
+
     <v-alert
       v-if="editMode"
       type="info"
@@ -952,6 +1014,98 @@ function toggleFavoriteActive() {
 
 :deep(.dashboard-grid) {
   margin-top: -8px;
+}
+
+.dashboard-ai-home {
+  border: 1px solid var(--hairline);
+  border-radius: 18px;
+  background: var(--surface-1);
+  padding: 18px;
+}
+
+.dashboard-ai-home__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.dashboard-ai-home__eyebrow {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dashboard-ai-home__title {
+  margin: 4px 0 0;
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-ai-home__copy {
+  max-width: 720px;
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dashboard-ai-home__tasks {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-ai-home__task {
+  padding: 14px;
+}
+
+.dashboard-ai-home__task-top,
+.dashboard-ai-home__task-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dashboard-ai-home__task-title {
+  margin-top: 14px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.dashboard-ai-home__task-copy {
+  min-height: 40px;
+  margin: 6px 0 14px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.dashboard-ai-home__task-actions {
+  justify-content: flex-end;
+}
+
+@media (max-width: 1100px) {
+  .dashboard-ai-home__tasks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-ai-home__header {
+    flex-direction: column;
+  }
+
+  .dashboard-ai-home__tasks {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 1024px) {

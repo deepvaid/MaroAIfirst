@@ -89,17 +89,30 @@ export function useSpeechRecognition() {
       return
     }
 
-    isListening.value = true
-    recognition.start()
+    try {
+      isListening.value = true
+      recognition.start()
+    } catch {
+      error.value = 'Unable to start voice input.'
+      isListening.value = false
+    }
   }
 
   function stop() {
-    recognition?.stop()
+    try {
+      recognition?.stop()
+    } catch {
+      // Some browsers throw when stop is called after permission changes.
+    }
     isListening.value = false
   }
 
   function abort() {
-    recognition?.abort()
+    try {
+      recognition?.abort()
+    } catch {
+      // Some browsers throw when abort is called after recognition ended.
+    }
     isListening.value = false
   }
 

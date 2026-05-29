@@ -31,13 +31,13 @@ const iconByKind: Record<OnboardingPlan['preview']['kind'], string> = {
 
 <style scoped>
 .preview-card {
-  border: 1px solid rgba(160, 204, 255, 0.16);
-  background: rgba(255, 255, 255, 0.055) !important;
-  color: white;
+  border: 1px solid var(--hairline);
+  background: var(--surface-0) !important;
+  color: var(--ink);
 }
 
 .preview-kicker {
-  color: rgba(146, 215, 255, 0.78);
+  color: var(--accent-ink);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -51,7 +51,7 @@ const iconByKind: Record<OnboardingPlan['preview']['kind'], string> = {
 
 .preview-description {
   margin-top: 4px;
-  color: rgba(225, 238, 255, 0.68);
+  color: var(--muted);
   font-size: 0.9rem;
   line-height: 1.45;
 }

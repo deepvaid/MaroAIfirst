@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useRoute, useRouter } from 'vue-router'
 import { useAccountsStore } from '@/stores/useAccounts'
+import { useCopilotStore } from '@/stores/useCopilot'
 import AssistantConversationPanel from '../components/AssistantConversationPanel.vue'
 import ClarificationCards from '../components/ClarificationCards.vue'
 import HandoffBanner from '../components/HandoffBanner.vue'
@@ -16,12 +17,14 @@ import { useAiStateManager } from '../composables/useAiStateManager'
 import { useAudioLevel } from '../composables/useAudioLevel'
 import { useOnboardingSession } from '../composables/useOnboardingSession'
 import { useSpeechSynthesis } from '../composables/useSpeechSynthesis'
+import type { AssistantAction } from '../services/assistantChat'
 
 const ONBOARDING_COMPLETE_KEY = 'maropost_onboarding_complete'
 
 const router = useRouter()
 const route = useRoute()
 const accountsStore = useAccountsStore()
+const copilot = useCopilotStore()
 const session = useOnboardingSession()
 const {
   phase,
@@ -47,6 +50,10 @@ const accountId = computed(() => {
 
 const trustSources = computed(() => plan.value?.sources ?? ['Workspace data', 'Help docs'])
 const writeCount = computed(() => plan.value?.steps.filter(step => step.mode === 'write').length)
+const readinessLabel = computed(() => `${accountsStore.activeAccount?.name ?? 'This workspace'} is about 60% ready: analytics are visible, and Da Vinci can guide the remaining launch tasks.`)
+
+const heroInput = computed(() => phase.value === 'welcome' || phase.value === 'intent')
+const orbSize = computed(() => (heroInput.value ? 124 : 92))
 
 function markOnboardingComplete() {
   try {
@@ -58,12 +65,22 @@ function markOnboardingComplete() {
 
 function openClassicUi() {
   markOnboardingComplete()
+  copilot.seedPrompt('Continue from Jarvis and tell me the next best launch step.', {
+    openPanel: true,
+    pinned: true,
+    autoSubmit: true,
+  })
   router.push({ name: 'Dashboard', params: { accountId: accountId.value } })
 }
 
 function openHandoff() {
   if (!result.value) return
   markOnboardingComplete()
+  copilot.seedPrompt(`Continue from Jarvis: ${result.value.description}`, {
+    openPanel: true,
+    pinned: true,
+    autoSubmit: true,
+  })
   if (result.value.handoff.path) {
     router.push({
       path: result.value.handoff.path,
@@ -95,6 +112,18 @@ function onVoiceSubmit(text: string) {
   if (!text.trim()) return
   aiState.setState('thinking')
   session.submitFreeTextIntent(text)
+}
+
+function handleConversationAction(action: AssistantAction) {
+  if (action.id === 'guide') {
+    session.startGuidedMode()
+    return
+  }
+  if (action.id === 'classic') {
+    openClassicUi()
+    return
+  }
+  session.submitFreeTextIntent(action.prompt)
 }
 
 watch(isBusy, (busy) => {
@@ -140,62 +169,99 @@ onBeforeUnmount(() => {
     </header>
 
     <main class="assistant-main">
-      <JarvisOrb :state="aiState.state.value" :audio-level="audioLevel.level.value" />
-
-      <div class="assistant-phase" aria-live="polite">
-        <WelcomeModeChooser
-          v-if="phase === 'welcome'"
-          :account-name="accountsStore.activeAccount?.name ?? 'this workspace'"
-          @guide="session.startGuidedMode"
-          @classic="openClassicUi"
+      <div class="hero">
+        <JarvisOrb
+          class="hero-orb"
+          :size="orbSize"
+          :state="aiState.state.value"
+          :audio-level="audioLevel.level.value"
         />
 
-        <OnboardingIntentCards
-          v-else-if="phase === 'intent'"
-          :intents="intents"
-          @select="session.selectIntent"
-        />
+        <div class="assistant-phase" aria-live="polite">
+          <template v-if="phase === 'welcome'">
+            <WelcomeModeChooser
+              :account-name="accountsStore.activeAccount?.name ?? 'this workspace'"
+              :readiness-label="readinessLabel"
+            />
+            <VoiceInputController
+              class="hero-input"
+              :disabled="isBusy"
+              @submit="onVoiceSubmit"
+              @listening-change="onListeningChange"
+            />
+            <div class="starter-chips">
+              <button
+                v-for="intent in intents"
+                :key="intent.id"
+                type="button"
+                class="starter-chip"
+                @click="session.selectIntent(intent.id)"
+              >
+                <v-icon size="18" class="starter-chip-icon">{{ intent.icon }}</v-icon>
+                <span class="starter-chip-label">{{ intent.title }}</span>
+                <v-icon size="15" class="starter-chip-chevron">chevron-right</v-icon>
+              </button>
+            </div>
+          </template>
 
-        <ClarificationCards
-          v-else-if="phase === 'clarify'"
-          :questions="activeQuestions"
-          :answers="answers"
-          :busy="isBusy"
-          @answer="session.answerQuestion"
-          @continue="session.buildPlan"
-        />
+          <template v-else-if="phase === 'intent'">
+            <h1 class="phase-title">What do you want to work on?</h1>
+            <VoiceInputController
+              class="hero-input"
+              :disabled="isBusy"
+              @submit="onVoiceSubmit"
+              @listening-change="onListeningChange"
+            />
+            <OnboardingIntentCards :intents="intents" @select="session.selectIntent" />
+          </template>
 
-        <TaskPlanPanel
-          v-else-if="phase === 'plan' && plan"
-          :plan="plan"
-          :busy="isBusy"
-          @approve="session.approvePlan"
-          @edit="session.editPlan"
-          @classic="openClassicUi"
-        />
+          <ClarificationCards
+            v-else-if="phase === 'clarify'"
+            :questions="activeQuestions"
+            :answers="answers"
+            :busy="isBusy"
+            @answer="session.answerQuestion"
+            @continue="session.buildPlan"
+          />
 
-        <section v-else-if="phase === 'execute'" class="thinking-card">
-          <v-progress-circular indeterminate color="primary" size="28" />
-          <div>
-            <strong>Running the approved prototype tools...</strong>
-            <p>Writes are simulated and remain reviewable.</p>
-          </div>
-        </section>
+          <TaskPlanPanel
+            v-else-if="phase === 'plan' && plan"
+            :plan="plan"
+            :busy="isBusy"
+            @approve="session.approvePlan"
+            @edit="session.editPlan"
+            @classic="openClassicUi"
+          />
 
-        <HandoffBanner
-          v-else-if="phase === 'handoff' && result"
-          :result="result"
-          @open="openHandoff"
-        />
+          <section v-else-if="phase === 'execute'" class="thinking-card">
+            <v-progress-circular indeterminate color="primary" size="28" />
+            <div>
+              <strong>Running the approved prototype tools...</strong>
+              <p>Writes are simulated and remain reviewable.</p>
+            </div>
+          </section>
+
+          <HandoffBanner
+            v-else-if="phase === 'handoff' && result"
+            :result="result"
+            @open="openHandoff"
+          />
+        </div>
       </div>
     </main>
 
     <footer class="assistant-footer">
-      <VoiceInputController :disabled="isBusy" @submit="onVoiceSubmit" @listening-change="onListeningChange" />
+      <VoiceInputController
+        v-if="!heroInput"
+        :disabled="isBusy"
+        @submit="onVoiceSubmit"
+        @listening-change="onListeningChange"
+      />
       <AssistantConversationPanel
         :messages="conversation"
         :state-label="aiState.stateLabel.value"
         :error="error || aiState.errorMessage.value"
+        @select-action="handleConversationAction"
       />
     </footer>
   </div>
@@ -205,13 +271,11 @@ onBeforeUnmount(() => {
 .ai-first-layer {
   position: relative;
   min-height: 100vh;
-  overflow: hidden;
-  padding: 24px;
-  background:
-    radial-gradient(circle at 50% 32%, rgba(35, 123, 186, 0.26), transparent 34%),
-    radial-gradient(circle at 50% 72%, rgba(18, 42, 86, 0.34), transparent 38%),
-    linear-gradient(135deg, #050608 0%, #080d17 45%, #030407 100%);
-  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 24px clamp(20px, 5vw, 48px) 32px;
+  background: var(--surface-0);
+  color: var(--ink);
 }
 
 .background-grid {
@@ -219,10 +283,10 @@ onBeforeUnmount(() => {
   inset: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(rgba(124, 208, 255, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124, 208, 255, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(26, 24, 20, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(26, 24, 20, 0.035) 1px, transparent 1px);
   background-size: 64px 64px;
-  mask-image: radial-gradient(circle at 50% 40%, black, transparent 75%);
+  mask-image: radial-gradient(circle at 50% 32%, black, transparent 70%);
 }
 
 .assistant-topbar {
@@ -238,31 +302,97 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: rgba(225, 238, 255, 0.86);
-  font-weight: 750;
+  color: var(--ink);
+  font-weight: 700;
 }
 
 .brand-orb {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   border-radius: 999px;
   background: rgb(var(--v-theme-primary));
-  box-shadow: 0 0 28px rgba(72, 189, 255, 0.9);
+  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
 .assistant-main {
   position: relative;
   z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0 24px;
+}
+
+.hero {
   display: grid;
-  align-content: center;
-  min-height: calc(100vh - 270px);
-  padding: 10px 0 28px;
+  justify-items: center;
+  gap: 26px;
+  width: 100%;
+  max-width: 880px;
+}
+
+.hero-orb {
+  margin-bottom: 0;
 }
 
 .assistant-phase {
-  position: relative;
-  z-index: 3;
-  margin-top: -28px;
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+}
+
+.hero-input {
+  width: 100%;
+}
+
+.phase-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-align: center;
+}
+
+.starter-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.starter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-pill);
+  background: var(--surface-1);
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.starter-chip:hover,
+.starter-chip:focus-visible {
+  border-color: color-mix(in oklch, rgb(var(--v-theme-primary)) 50%, var(--hairline));
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.starter-chip-icon {
+  color: rgb(var(--v-theme-primary));
+}
+
+.starter-chip-chevron {
+  color: var(--muted);
 }
 
 .assistant-footer {
@@ -270,6 +400,7 @@ onBeforeUnmount(() => {
   z-index: 4;
   display: grid;
   gap: 12px;
+  margin-top: 16px;
 }
 
 .thinking-card {
@@ -278,15 +409,19 @@ onBeforeUnmount(() => {
   gap: 16px;
   max-width: 680px;
   margin: 0 auto;
-  padding: 18px;
-  border: 1px solid rgba(160, 204, 255, 0.16);
-  border-radius: 24px;
-  background: rgba(6, 12, 24, 0.78);
+  padding: 18px 20px;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-section);
+  background: var(--surface-1);
+}
+
+.thinking-card strong {
+  color: var(--ink);
 }
 
 .thinking-card p {
   margin: 2px 0 0;
-  color: rgba(225, 238, 255, 0.64);
+  color: var(--muted);
 }
 
 @media (max-width: 900px) {

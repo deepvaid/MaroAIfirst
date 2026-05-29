@@ -14,6 +14,11 @@ const emit = defineEmits<{
 const text = ref('')
 const speech = useSpeechRecognition()
 const transcriptPreview = computed(() => speech.interimTranscript.value || speech.finalTranscript.value)
+const placeholder = computed(() =>
+  speech.isSupported.value
+    ? 'Ask Jarvis anything\u2026'
+    : 'Voice is unavailable here \u2014 type your request\u2026',
+)
 
 watch(speech.isListening, listening => emit('listeningChange', listening))
 
@@ -38,34 +43,48 @@ function submitText() {
 
 <template>
   <div class="voice-controller">
-    <v-btn
-      icon
-      size="x-large"
-      :color="speech.isListening.value ? 'error' : 'primary'"
-      :variant="speech.isListening.value ? 'flat' : 'tonal'"
-      :disabled="disabled || !speech.isSupported.value"
-      :aria-label="speech.isListening.value ? 'Stop listening' : 'Start voice input'"
-      class="mic-button"
-      @click="toggleMic"
-    >
-      <v-icon size="30">{{ speech.isListening.value ? 'mdi-microphone-off' : 'mdi-microphone' }}</v-icon>
-    </v-btn>
-
-    <div class="text-input-shell">
-      <v-text-field
+    <div class="composer" :class="{ 'composer--listening': speech.isListening.value }">
+      <v-textarea
         v-model="text"
-        density="comfortable"
-        variant="solo-filled"
-        rounded="pill"
+        class="composer-field"
+        variant="plain"
+        rows="1"
+        max-rows="6"
+        auto-grow
         hide-details
-        bg-color="rgba(255,255,255,0.08)"
         :disabled="disabled"
-        :placeholder="speech.isSupported.value ? 'Type instead, or use the microphone...' : 'Voice is unavailable here. Type your request...'"
-        @keyup.enter="submitText"
+        :placeholder="placeholder"
+        @keydown.enter.exact.prevent="submitText"
       />
-      <v-btn color="primary" rounded="pill" class="text-none" :disabled="disabled || !text.trim()" @click="submitText">
-        Send
-      </v-btn>
+
+      <div class="composer-actions">
+        <v-btn
+          icon
+          variant="text"
+          size="small"
+          :color="speech.isListening.value ? 'error' : undefined"
+          :disabled="disabled || !speech.isSupported.value"
+          :aria-label="speech.isListening.value ? 'Stop listening' : 'Start voice input'"
+          class="mic-button"
+          @click="toggleMic"
+        >
+          <v-icon size="20">{{ speech.isListening.value ? 'mic-off' : 'mic' }}</v-icon>
+        </v-btn>
+
+        <v-spacer />
+
+        <v-btn
+          icon
+          size="small"
+          color="primary"
+          :disabled="disabled || !text.trim()"
+          aria-label="Send"
+          class="send-button"
+          @click="submitText"
+        >
+          <v-icon size="18">arrow-up</v-icon>
+        </v-btn>
+      </div>
     </div>
 
     <div v-if="transcriptPreview || speech.error.value" class="speech-preview">
@@ -80,32 +99,61 @@ function submitText() {
 <style scoped>
 .voice-controller {
   display: grid;
-  justify-items: center;
-  gap: 12px;
-  width: min(760px, calc(100vw - 32px));
+  gap: 8px;
+  width: min(720px, 100%);
   margin: 0 auto;
 }
 
-.mic-button {
-  box-shadow: 0 0 44px rgba(72, 189, 255, 0.28);
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px 8px;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: var(--surface-1);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.text-input-shell {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px;
+.composer:focus-within {
+  border-color: color-mix(in oklch, rgb(var(--v-theme-primary)) 55%, var(--hairline));
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.composer--listening {
+  border-color: rgb(var(--v-theme-error));
+}
+
+.composer-field {
   width: 100%;
 }
 
-.speech-preview {
-  color: rgba(225, 238, 255, 0.62);
-  font-size: 0.85rem;
-  text-align: center;
+.composer-field :deep(.v-field__input) {
+  padding: 6px 4px;
+  min-height: 30px;
+  font-size: 1rem;
+  color: var(--ink);
+  line-height: 1.5;
 }
 
-@media (max-width: 620px) {
-  .text-input-shell {
-    grid-template-columns: 1fr;
-  }
+.composer-field :deep(textarea)::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
+.composer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.send-button {
+  border-radius: 999px;
+}
+
+.speech-preview {
+  color: var(--muted);
+  font-size: 0.85rem;
+  text-align: center;
 }
 </style>

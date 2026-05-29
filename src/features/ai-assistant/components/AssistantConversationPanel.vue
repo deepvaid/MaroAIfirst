@@ -1,10 +1,16 @@
 <script setup lang="ts">
+import AssistantActionChips from './AssistantActionChips.vue'
 import type { ConversationEntry } from '../stores/onboardingSession'
+import type { AssistantAction } from '../services/assistantChat'
 
 defineProps<{
   messages: ConversationEntry[]
   stateLabel: string
   error?: string
+}>()
+
+const emit = defineEmits<{
+  selectAction: [action: AssistantAction]
 }>()
 </script>
 
@@ -23,6 +29,12 @@ defineProps<{
           :class="['message', `message-${message.role}`]"
         >
           {{ message.text }}
+          <AssistantActionChips
+            v-if="message.actions?.length"
+            class="message-actions"
+            :actions="message.actions"
+            @select="emit('selectAction', $event)"
+          />
         </div>
       </template>
     </div>
@@ -37,11 +49,10 @@ defineProps<{
   width: min(760px, calc(100vw - 32px));
   margin: 0 auto;
   padding: 14px 16px;
-  border: 1px solid rgba(160, 204, 255, 0.14);
-  border-radius: 22px;
-  background: rgba(5, 10, 20, 0.76);
-  color: white;
-  backdrop-filter: blur(18px);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: var(--surface-1);
+  color: var(--ink);
 }
 
 .status-dot {
@@ -50,7 +61,7 @@ defineProps<{
   margin-top: 7px;
   border-radius: 999px;
   background: rgb(var(--v-theme-primary));
-  box-shadow: 0 0 22px rgba(75, 190, 255, 0.9);
+  box-shadow: 0 0 0 4px var(--accent-soft);
 }
 
 .conversation-body {
@@ -58,7 +69,7 @@ defineProps<{
 }
 
 .status {
-  color: rgba(146, 215, 255, 0.78);
+  color: var(--accent-ink);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -67,16 +78,20 @@ defineProps<{
 
 .message {
   margin-top: 4px;
-  color: rgba(225, 238, 255, 0.74);
+  color: var(--ink);
   font-size: 0.9rem;
   line-height: 1.45;
 }
 
 .message-user {
-  color: rgba(255, 255, 255, 0.92);
+  color: var(--muted);
 }
 
 .message-error {
   color: rgb(var(--v-theme-error));
+}
+
+.message-actions {
+  margin-top: 8px;
 }
 </style>

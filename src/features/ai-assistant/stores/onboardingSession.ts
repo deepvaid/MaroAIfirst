@@ -10,11 +10,13 @@ import type {
   OnboardingPlan,
   ToolResult,
 } from '../services/agent/agentOrchestrator.types'
+import type { AssistantAction } from '../services/assistantChat'
 
 export interface ConversationEntry {
   id: string
   role: 'user' | 'assistant'
   text: string
+  actions?: AssistantAction[]
 }
 
 export const useOnboardingSessionStore = defineStore('jarvis-onboarding-session', () => {
@@ -31,6 +33,10 @@ export const useOnboardingSessionStore = defineStore('jarvis-onboarding-session'
       id: 'welcome',
       role: 'assistant',
       text: "Hi, I'm Jarvis for Maropost. I can set things up with you, or you can open the classic app.",
+      actions: [
+        { id: 'guide', label: 'Guide me', kind: 'read', prompt: 'Guide me through setup' },
+        { id: 'classic', label: 'Open classic UI', kind: 'read', prompt: 'Open classic UI' },
+      ],
     },
   ])
 

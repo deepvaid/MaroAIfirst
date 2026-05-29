@@ -39,9 +39,18 @@ watch(width, (w, prevW) => {
 const isFullPage = computed(() => !!route.meta?.fullPage)
 const isFlush = computed(() => !!route.meta?.flush)
 const showJarvisHandoff = computed(() => route.query.jarvisHandoff === '1')
+const isDashboardRoute = computed(() => route.name === 'Dashboard' || route.name === 'DashboardDetail')
 // On mobile, sidebar is a temporary overlay (not permanent)
 const sidebarTemporary = computed(() => smAndDown.value)
 const sidebarRail = computed(() => rail.value)
+const assistantPinned = computed(() => !smAndDown.value && (copilot.isPinned || isDashboardRoute.value))
+const assistantDrawerOpen = computed({
+  get: () => copilot.isOpen || assistantPinned.value,
+  set: (value: boolean) => {
+    if (value) copilot.open()
+    else copilot.close()
+  },
+})
 const copilotDrawerWidth = computed(() => {
   const target = copilot.isExpanded ? 880 : 480
   return Math.min(target, Math.max(320, width.value - 32))
@@ -87,10 +96,12 @@ const copilotDrawerWidth = computed(() => {
 
     <!-- Da Vinci Copilot Drawer -->
     <v-navigation-drawer
-      v-if="!isFullPage"
-      v-model="copilot.isOpen"
+      v-if="!isFullPage && (assistantDrawerOpen || assistantPinned)"
+      v-model="assistantDrawerOpen"
       location="right"
       :width="copilotDrawerWidth"
+      :permanent="assistantPinned"
+      :temporary="!assistantPinned"
       class="copilot-drawer"
     >
       <MpDaVinciBot

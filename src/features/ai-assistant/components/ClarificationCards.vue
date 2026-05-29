@@ -80,7 +80,7 @@ function currentAnswer(questionId: string) {
 }
 
 .eyebrow {
-  color: rgba(146, 215, 255, 0.82);
+  color: var(--accent-ink);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -89,7 +89,7 @@ function currentAnswer(questionId: string) {
 
 h2 {
   margin: 4px 0 0;
-  color: white;
+  color: var(--ink);
   font-size: 1.45rem;
 }
 
@@ -100,9 +100,9 @@ h2 {
 }
 
 .question-card {
-  border: 1px solid rgba(160, 204, 255, 0.16);
-  background: rgba(7, 13, 24, 0.78) !important;
-  color: white;
+  border: 1px solid var(--hairline);
+  background: var(--surface-1) !important;
+  color: var(--ink);
 }
 
 .question-label {

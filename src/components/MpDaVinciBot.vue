@@ -1,17 +1,22 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import DvWidgetDraftCard from './copilot/DvWidgetDraftCard.vue'
 import DvHistoryDrawer from './copilot/DvHistoryDrawer.vue'
 import DvToastStack from './copilot/DvToastStack.vue'
 import DvInsightCard from './copilot/DvInsightCard.vue'
+import AssistantActionChips from '@/features/ai-assistant/components/AssistantActionChips.vue'
 import { useAccountsStore } from '@/stores/useAccounts'
+import { useCopilotStore } from '@/stores/useCopilot'
 import { useDashboardsStore } from '@/stores/useDashboards'
 import { getMetricDescriptor } from '@/stores/dashboards/metricCatalog'
 import type { DashboardWidgetDraft } from '@/stores/dashboards/types'
 import { useDaVinciHistory } from '@/composables/useDaVinciHistory'
 import { useDaVinciToasts } from '@/composables/useDaVinciToasts'
+import { useAssistantContext } from '@/features/ai-assistant/composables/useAssistantContext'
+import { useSpeechRecognition } from '@/features/ai-assistant/composables/useSpeechRecognition'
+import { sendAssistantMessage, type AssistantAction } from '@/features/ai-assistant/services/assistantChat'
 
 interface DraftSetProps {
   drafts: DashboardWidgetDraft[]
@@ -28,6 +33,7 @@ interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
   text: string
+  actions?: AssistantAction[]
   componentData?: ChatComponent[]
 }
 
@@ -53,7 +59,10 @@ const emit = defineEmits<{
 const route = useRoute()
 const router = useRouter()
 const accountsStore = useAccountsStore()
+const copilot = useCopilotStore()
 const dashboardsStore = useDashboardsStore()
+const { context: assistantContext } = useAssistantContext()
+const speechRecognition = useSpeechRecognition()
 const { addItem, incrementAdded, clearAll } = useDaVinciHistory()
 const { pushToast } = useDaVinciToasts()
 
@@ -97,40 +106,19 @@ const targetDashboard = computed(() => {
 })
 
 const headerStatus = computed(() => {
-  if (!chatMode.value) return props.subtitle
-  if (isTyping.value) return generatingStatus.value || 'Drafting widgets…'
-  return 'Intelligent AI assistant'
+  if (isTyping.value) return generatingStatus.value || 'Checking for your changes…'
+  return `${assistantContext.value.pageLabel} assistant`
 })
 
 const suggestionPills = computed(() => {
-  const pills = [
-    { text: 'Try a different angle', icon: 'refresh-cw' },
-    { text: 'Compare to YoY', icon: 'calendar-range' },
-    { text: 'Segment by region', icon: 'align-left' },
-  ]
-  return pills
+  return assistantContext.value.nextSteps.slice(0, 3).map(step => ({
+    text: step.label,
+    icon: step.kind === 'write' ? 'wand-sparkles' : 'search',
+  }))
 })
 
 const landingSuggestions = computed(() => {
-  const items: string[] = []
-  if (isDashboardRoute.value) {
-    items.push('Show me email campaign performance over the last 30 days')
-    items.push('Revenue by channel for last 90 days')
-    items.push('Top campaigns by conversion')
-  } else {
-    items.push('Show open rate trend for last 30 days')
-    if (activeAccount.value?.subscriptions.includes('commerce')) {
-      items.push('Create a revenue by channel widget')
-      items.push('Add a recent orders table')
-    } else {
-      items.push('Add a top campaigns table')
-      items.push('Show contact growth trend')
-    }
-    if (activeAccount.value?.subscriptions.includes('service')) {
-      items.push('Show ticket volume over time')
-    }
-  }
-  return items.slice(0, 4)
+  return assistantContext.value.suggestedPrompts.slice(0, 4)
 })
 
 function makeId(prefix = 'm') {
@@ -164,8 +152,8 @@ function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
-function processQuery(text: string) {
-  if (!text) return
+async function processQuery(text: string) {
+  if (!text || isTyping.value) return
   const conversationId = currentConversationId.value ?? makeId('c')
   const isFirstPrompt = !currentConversationId.value
   currentConversationId.value = conversationId
@@ -190,59 +178,113 @@ function processQuery(text: string) {
     }
   }
 
-  setTimeout(() => {
-    isTyping.value = false
-    if (drafts && drafts.length > 0) {
-      messages.value.push({
-        id: makeId('a'),
-        role: 'assistant',
-        text: buildIntro(drafts.length),
-        componentData: [
-          {
-            type: 'widgetDraftSet',
-            props: {
-              drafts,
-              rationale,
-              conversationId,
-            },
-          },
-        ],
-      })
+  await new Promise(resolve => window.setTimeout(resolve, drafts ? 900 : 200))
+  isTyping.value = false
 
-      if (isFirstPrompt) {
-        addItem({
-          title: text,
-          draftedCount: drafts.length,
-        })
-      }
-    } else {
-      messages.value.push({
-        id: makeId('a'),
-        role: 'assistant',
-        text: "I couldn't map that to a supported widget yet. Try asking for revenue, orders, open rate, campaigns, contact growth, or ticket volume.",
-        componentData: [
-          {
-            type: 'insight',
-            props: {
-              headline: 'Try a widget-ready prompt',
-              description:
-                'Use prompts like “Create a revenue by channel widget”, “Show open rate trend for last 30 days”, or “Add a recent orders table”.',
-              severity: 'info',
-            },
+  if (drafts && drafts.length > 0) {
+    messages.value.push({
+      id: makeId('a'),
+      role: 'assistant',
+      text: buildIntro(drafts.length),
+      componentData: [
+        {
+          type: 'widgetDraftSet',
+          props: {
+            drafts,
+            rationale,
+            conversationId,
           },
-        ],
+        },
+      ],
+    })
+
+    if (isFirstPrompt) {
+      addItem({
+        title: text,
+        draftedCount: drafts.length,
       })
     }
     scrollToBottom()
-  }, 1200)
+    return
+  }
+
+  generatingStatus.value = 'Checking workspace context…'
+  isTyping.value = true
+
+  try {
+    const result = await sendAssistantMessage({
+      prompt: text,
+      history: messages.value.map(message => ({ role: message.role, text: message.text })),
+      context: assistantContext.value,
+    })
+    messages.value.push({
+      id: makeId('a'),
+      role: 'assistant',
+      text: result.text,
+      actions: result.actions,
+    })
+  } catch {
+    messages.value.push({
+      id: makeId('a'),
+      role: 'assistant',
+      text: "I couldn't complete that request yet, but I can still guide the next reviewable step from this page.",
+      actions: assistantContext.value.nextSteps.slice(0, 3),
+      componentData: [
+        {
+          type: 'insight',
+          props: {
+            headline: 'Try a reviewable action',
+            description: 'Use one of the suggested actions below and Da Vinci will keep changes behind an approval step.',
+            severity: 'info',
+          },
+        },
+      ],
+    })
+  } finally {
+    isTyping.value = false
+    generatingStatus.value = ''
+    scrollToBottom()
+  }
 }
 
 function sendQuery() {
-  processQuery(inputText.value.trim())
+  void processQuery(inputText.value.trim())
 }
 
 function sendSuggestion(text: string) {
-  processQuery(text)
+  void processQuery(text)
+}
+
+function routeForAction(action: AssistantAction) {
+  if (!action.routeName || !targetAccountId.value) return null
+  return {
+    name: action.routeName,
+    params: { accountId: targetAccountId.value },
+    query: action.kind === 'write' ? { jarvisHandoff: '1', focus: action.id } : undefined,
+  }
+}
+
+function handleAssistantAction(action: AssistantAction) {
+  if (action.kind === 'write') {
+    const approved = window.confirm(`Da Vinci will prepare "${action.label}" for review before anything is finalized. Continue?`)
+    if (!approved) return
+  }
+
+  const target = routeForAction(action)
+  if (target) {
+    router.push(target)
+    return
+  }
+
+  void processQuery(action.prompt)
+}
+
+function toggleVoiceInput() {
+  if (speechRecognition.isListening.value) {
+    speechRecognition.stop()
+    return
+  }
+  speechRecognition.start()
 }
 
 function newChat() {
@@ -339,6 +381,28 @@ function onComposerKeydown(event: KeyboardEvent) {
     sendQuery()
   }
 }
+
+watch(
+  () => copilot.seededPrompt,
+  (prompt) => {
+    if (!prompt) return
+    const shouldSubmit = copilot.seedAutoSubmit
+    inputText.value = prompt
+    chatMode.value = true
+    copilot.clearSeedPrompt()
+    if (shouldSubmit) void processQuery(prompt)
+  },
+  { immediate: true },
+)
+
+watch(
+  speechRecognition.finalTranscript,
+  (transcript) => {
+    if (!transcript) return
+    inputText.value = transcript
+    chatMode.value = true
+  },
+)
 </script>
 
 <template>
@@ -405,9 +469,9 @@ function onComposerKeydown(event: KeyboardEvent) {
         <div class="dv-landing__avatar">
           <v-icon size="28" class="dv-on-accent-icon">sparkles</v-icon>
         </div>
-        <h2 class="dv-landing__title">What can I help you build?</h2>
+        <h2 class="dv-landing__title">What should Da Vinci do on {{ assistantContext.pageLabel }}?</h2>
         <p class="dv-landing__sub">
-          Ask Da Vinci for a metric, trend, comparison, or table. I'll draft widgets you can review and add to the active dashboard.
+          {{ assistantContext.readinessLabel }} I can read {{ assistantContext.sources.join(', ').toLowerCase() }} and keep changes reviewable.
         </p>
         <div class="dv-landing__suggestions">
           <button
@@ -434,6 +498,11 @@ function onComposerKeydown(event: KeyboardEvent) {
           </div>
           <div class="dv-msg-bot__body">
             <div v-if="msg.text" class="dv-msg-bot__intro" v-html="msg.text"></div>
+            <AssistantActionChips
+              v-if="msg.actions?.length"
+              :actions="msg.actions"
+              @select="handleAssistantAction"
+            />
 
             <template v-if="isDraftSetMessage(msg)">
               <div v-if="getDraftSetProps(msg)?.rationale" class="dv-msg-bot__rationale">
@@ -498,6 +567,18 @@ function onComposerKeydown(event: KeyboardEvent) {
 
     <!-- ═══ COMPOSER ═══ -->
     <footer class="dv-panel__composer">
+      <div class="dv-next-steps">
+        <div class="dv-next-steps__label">Next steps</div>
+        <button
+          v-for="step in assistantContext.nextSteps.slice(0, 3)"
+          :key="step.id"
+          type="button"
+          class="dv-next-steps__item"
+          @click="handleAssistantAction(step)"
+        >
+          {{ step.label }}
+        </button>
+      </div>
       <div v-if="chatMode" class="dv-composer__pills">
         <button
           v-for="pill in suggestionPills"
@@ -521,6 +602,15 @@ function onComposerKeydown(event: KeyboardEvent) {
           class="dv-composer__input"
           @keydown="onComposerKeydown"
         />
+        <button
+          type="button"
+          class="dv-composer__voice"
+          :class="{ 'dv-composer__voice--active': speechRecognition.isListening.value }"
+          :aria-label="speechRecognition.isListening.value ? 'Stop voice input' : 'Voice input'"
+          @click="toggleVoiceInput"
+        >
+          <v-icon size="16">{{ speechRecognition.isListening.value ? 'mic-off' : 'mic' }}</v-icon>
+        </button>
         <button
           type="button"
           class="dv-composer__send"
@@ -860,6 +950,39 @@ function onComposerKeydown(event: KeyboardEvent) {
   border-top: 1px solid rgb(var(--v-theme-outline-variant));
 }
 
+.dv-next-steps {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.dv-next-steps__label {
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dv-next-steps__item {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid rgb(var(--v-theme-outline-variant));
+  border-radius: var(--mp-borderRadius-md);
+  background: rgb(var(--v-theme-surface));
+  color: rgb(var(--v-theme-on-surface));
+  cursor: pointer;
+  font-size: var(--mp-typography-fontSize-sm);
+  font-weight: 600;
+  text-align: left;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.dv-next-steps__item:hover {
+  background: var(--dv-accent-soft);
+  border-color: var(--dv-accent);
+}
+
 .dv-composer__pills {
   display: flex;
   gap: 6px;
@@ -931,6 +1054,23 @@ function onComposerKeydown(event: KeyboardEvent) {
   place-items: center;
   cursor: pointer;
   transition: filter 120ms ease, opacity 120ms ease;
+}
+
+.dv-composer__voice {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 9999px;
+  background: rgb(var(--v-theme-surface-variant));
+  color: rgb(var(--v-theme-on-surface-variant));
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+
+.dv-composer__voice--active {
+  background: var(--dv-accent-soft);
+  color: var(--dv-accent);
 }
 
 .dv-composer__send:hover {

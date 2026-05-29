@@ -38,25 +38,24 @@ const emit = defineEmits<{
 .intent-card {
   min-height: 162px;
   padding: 18px;
-  border: 1px solid rgba(160, 204, 255, 0.18);
-  border-radius: 24px;
-  background: rgba(8, 14, 26, 0.72);
-  color: white;
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: var(--surface-1);
+  color: var(--ink);
   text-align: left;
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
-  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .intent-card:hover,
 .intent-card:focus-visible {
-  border-color: rgba(90, 192, 255, 0.7);
-  background: rgba(14, 25, 44, 0.88);
+  border-color: color-mix(in oklch, rgb(var(--v-theme-primary)) 50%, var(--hairline));
+  box-shadow: 0 0 0 3px var(--accent-soft);
   transform: translateY(-3px);
   outline: none;
 }
 
 .intent-icon {
-  color: rgba(109, 210, 255, 0.94);
+  color: rgb(var(--v-theme-primary));
 }
 
 .intent-title,
@@ -72,7 +71,7 @@ const emit = defineEmits<{
 
 .intent-description {
   margin-top: 8px;
-  color: rgba(225, 238, 255, 0.64);
+  color: var(--muted);
   font-size: 0.84rem;
   line-height: 1.45;
 }

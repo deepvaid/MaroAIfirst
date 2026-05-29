@@ -76,11 +76,10 @@ const writeCount = computed(() => props.plan.steps.filter(step => step.mode === 
   max-width: 1080px;
   margin: 0 auto;
   padding: 24px;
-  border: 1px solid rgba(160, 204, 255, 0.18);
-  border-radius: 30px;
-  background: rgba(6, 12, 24, 0.84);
-  color: white;
-  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  background: var(--surface-1);
+  color: var(--ink);
 }
 
 .plan-header,
@@ -95,7 +94,7 @@ const writeCount = computed(() => props.plan.steps.filter(step => step.mode === 
 }
 
 .eyebrow {
-  color: rgba(146, 215, 255, 0.82);
+  color: var(--accent-ink);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -104,13 +103,14 @@ const writeCount = computed(() => props.plan.steps.filter(step => step.mode === 
 
 h2 {
   margin: 4px 0 0;
+  color: var(--ink);
   font-size: 1.55rem;
 }
 
 .summary {
   max-width: 760px;
   margin: 16px 0 22px;
-  color: rgba(225, 238, 255, 0.72);
+  color: var(--muted);
   line-height: 1.6;
 }
 
@@ -131,9 +131,9 @@ h2 {
   align-items: center;
   gap: 14px;
   padding: 14px;
-  border: 1px solid rgba(160, 204, 255, 0.14);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  background: var(--surface-0);
 }
 
 .step-index {
@@ -142,8 +142,8 @@ h2 {
   width: 30px;
   height: 30px;
   border-radius: 999px;
-  background: rgba(109, 210, 255, 0.14);
-  color: rgba(169, 226, 255, 0.95);
+  background: var(--accent-soft);
+  color: var(--accent-ink);
   font-weight: 800;
 }
 
@@ -153,7 +153,7 @@ h2 {
 
 .step-tool {
   margin-top: 2px;
-  color: rgba(225, 238, 255, 0.52);
+  color: var(--muted);
   font-size: 0.8rem;
 }
 

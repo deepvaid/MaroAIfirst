@@ -35,10 +35,10 @@ const emit = defineEmits<{
   max-width: 980px;
   margin: 0 auto;
   padding: 22px;
-  border: 1px solid rgba(122, 255, 190, 0.2);
-  border-radius: 28px;
-  background: rgba(7, 20, 20, 0.84);
-  color: white;
+  border: 1px solid color-mix(in oklch, rgb(var(--v-theme-success)) 38%, var(--hairline));
+  border-radius: 16px;
+  background: rgb(var(--v-theme-success-container));
+  color: var(--ink);
 }
 
 .handoff-copy {
@@ -46,7 +46,7 @@ const emit = defineEmits<{
 }
 
 .eyebrow {
-  color: rgba(122, 255, 190, 0.82);
+  color: rgb(var(--v-theme-on-success-container));
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -55,12 +55,13 @@ const emit = defineEmits<{
 
 h2 {
   margin: 4px 0;
+  color: var(--ink);
   font-size: 1.35rem;
 }
 
 p {
   margin: 0;
-  color: rgba(225, 238, 255, 0.7);
+  color: var(--muted);
 }
 
 @media (max-width: 760px) {
