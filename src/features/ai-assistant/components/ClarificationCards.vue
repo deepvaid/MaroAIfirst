@@ -100,8 +100,9 @@ h2 {
 }
 
 .question-card {
-  border: 1px solid var(--hairline);
-  background: var(--surface-1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.92) !important;
+  background: rgba(255, 255, 255, 0.84) !important;
+  box-shadow: 0 1px 3px rgba(58, 42, 36, 0.06);
   color: var(--ink);
 }
 

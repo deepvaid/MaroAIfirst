@@ -76,9 +76,11 @@ const writeCount = computed(() => props.plan.steps.filter(step => step.mode === 
   max-width: 1080px;
   margin: 0 auto;
   padding: 24px;
-  border: 1px solid var(--hairline);
+  border: 1px solid rgba(255, 255, 255, 0.92);
   border-radius: 16px;
-  background: var(--surface-1);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 1px 4px rgba(58, 42, 36, 0.06);
+  backdrop-filter: blur(10px);
   color: var(--ink);
 }
 
@@ -131,9 +133,9 @@ h2 {
   align-items: center;
   gap: 14px;
   padding: 14px;
-  border: 1px solid var(--hairline);
+  border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 12px;
-  background: var(--surface-0);
+  background: rgba(255, 255, 255, 0.72);
 }
 
 .step-index {

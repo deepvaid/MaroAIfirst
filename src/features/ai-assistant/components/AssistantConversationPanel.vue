@@ -45,23 +45,26 @@ const emit = defineEmits<{
 .conversation-panel {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 14px;
   width: min(760px, calc(100vw - 32px));
-  margin: 0 auto;
-  padding: 14px 16px;
-  border: 1px solid var(--hairline);
-  border-radius: 16px;
-  background: var(--surface-1);
+  margin: 44px auto 0;
+  padding: 22px 26px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 1px 3px rgba(58, 42, 36, 0.05);
+  backdrop-filter: blur(10px);
   color: var(--ink);
 }
 
 .status-dot {
-  width: 10px;
-  height: 10px;
-  margin-top: 7px;
+  width: 11px;
+  height: 11px;
+  margin-top: 6px;
   border-radius: 999px;
   background: rgb(var(--v-theme-primary));
-  box-shadow: 0 0 0 4px var(--accent-soft);
+  box-shadow: 0 0 0 4px rgba(26, 183, 234, 0.16);
+  animation: ready-pulse 2.4s ease-in-out infinite;
 }
 
 .conversation-body {
@@ -69,18 +72,20 @@ const emit = defineEmits<{
 }
 
 .status {
-  color: var(--accent-ink);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.09375rem;
   text-transform: uppercase;
 }
 
 .message {
-  margin-top: 4px;
+  margin-top: 0;
   color: var(--ink);
-  font-size: 0.9rem;
-  line-height: 1.45;
+  font-size: 1rem;
+  line-height: 1.5;
+  white-space: pre-line;
 }
 
 .message-user {
@@ -92,6 +97,23 @@ const emit = defineEmits<{
 }
 
 .message-actions {
-  margin-top: 8px;
+  margin-top: 14px;
+}
+
+@keyframes ready-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(26, 183, 234, 0.18);
+  }
+
+  50% {
+    box-shadow: 0 0 0 7px rgba(26, 183, 234, 0.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-dot {
+    animation: none !important;
+  }
 }
 </style>

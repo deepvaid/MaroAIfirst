@@ -25,6 +25,7 @@ watch(speech.isListening, listening => emit('listeningChange', listening))
 watch(speech.finalTranscript, (transcript) => {
   if (!transcript) return
   emit('submit', transcript)
+  speech.clearTranscripts()
 })
 
 function toggleMic() {
@@ -99,25 +100,31 @@ function submitText() {
 <style scoped>
 .voice-controller {
   display: grid;
-  gap: 8px;
-  width: min(720px, 100%);
+  gap: 6px;
+  width: min(680px, 100%);
   margin: 0 auto;
 }
 
 .composer {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding: 10px 12px 8px;
-  border: 1px solid var(--hairline);
-  border-radius: 16px;
-  background: var(--surface-1);
+  gap: 6px;
+  padding: 16px 18px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.92);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow:
+    0 1px 3px rgba(58, 42, 36, 0.05),
+    0 18px 44px -24px rgba(58, 42, 36, 0.16);
+  backdrop-filter: blur(12px) saturate(115%);
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .composer:focus-within {
-  border-color: color-mix(in oklch, rgb(var(--v-theme-primary)) 55%, var(--hairline));
-  box-shadow: 0 0 0 4px var(--accent-soft);
+  border-color: rgba(26, 183, 234, 0.45);
+  box-shadow:
+    0 0 0 3px rgba(26, 183, 234, 0.12),
+    0 18px 44px -24px rgba(58, 42, 36, 0.18);
 }
 
 .composer--listening {
@@ -129,11 +136,11 @@ function submitText() {
 }
 
 .composer-field :deep(.v-field__input) {
-  padding: 6px 4px;
-  min-height: 30px;
-  font-size: 1rem;
+  padding: 2px 4px;
+  min-height: 28px;
+  font-size: clamp(0.9375rem, 1.8vw, 1.1875rem);
   color: var(--ink);
-  line-height: 1.5;
+  line-height: 1.4;
 }
 
 .composer-field :deep(textarea)::placeholder {
@@ -144,11 +151,27 @@ function submitText() {
 .composer-actions {
   display: flex;
   align-items: center;
+  margin-top: 6px;
   gap: 8px;
 }
 
+.mic-button,
 .send-button {
+  width: 40px;
+  height: 40px;
   border-radius: 999px;
+}
+
+.send-button {
+  width: 42px;
+  height: 42px;
+  box-shadow: 0 4px 12px -4px rgba(26, 183, 234, 0.5);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.send-button:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px -8px rgba(26, 183, 234, 0.75);
 }
 
 .speech-preview {
