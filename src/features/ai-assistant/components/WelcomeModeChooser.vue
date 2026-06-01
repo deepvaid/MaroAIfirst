@@ -21,7 +21,7 @@ defineProps<{
 
 h1 {
   margin: 0;
-  color: #0e1b2a;
+  color: #d6d8d8;
   font-size: clamp(1.75rem, 3.6vw, 2.625rem);
   font-weight: 700;
   letter-spacing: -0.055rem;
@@ -31,7 +31,7 @@ h1 {
 .readiness {
   max-width: 520px;
   margin: 10px auto 0;
-  color: rgba(14, 27, 42, 0.52);
+  color: rgba(214, 216, 216, 0.72);
   font-size: 0.9375rem;
   line-height: 1.5;
   font-weight: 400;

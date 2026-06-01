@@ -49,12 +49,12 @@ const emit = defineEmits<{
   width: min(760px, calc(100vw - 32px));
   margin: 44px auto 0;
   padding: 22px 26px;
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.76);
-  box-shadow: 0 1px 3px rgba(58, 42, 36, 0.05);
-  backdrop-filter: blur(10px);
-  color: var(--ink);
+  background: rgba(15, 21, 35, 0.82);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  color: #d6d8d8;
 }
 
 .status-dot {
@@ -73,7 +73,7 @@ const emit = defineEmits<{
 
 .status {
   margin-bottom: 8px;
-  color: var(--muted);
+  color: rgba(214, 216, 216, 0.65);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.09375rem;
@@ -82,22 +82,28 @@ const emit = defineEmits<{
 
 .message {
   margin-top: 0;
-  color: var(--ink);
+  color: #eff0f0;
   font-size: 1rem;
   line-height: 1.5;
   white-space: pre-line;
 }
 
 .message-user {
-  color: var(--muted);
+  color: rgba(214, 216, 216, 0.78);
 }
 
 .message-error {
-  color: rgb(var(--v-theme-error));
+  color: #f87171;
 }
 
 .message-actions {
   margin-top: 14px;
+}
+
+.message-actions :deep(.v-chip) {
+  border: 1px solid rgba(66, 164, 254, 0.35);
+  background: rgba(66, 164, 254, 0.12) !important;
+  color: #9ecfff !important;
 }
 
 @keyframes ready-pulse {
